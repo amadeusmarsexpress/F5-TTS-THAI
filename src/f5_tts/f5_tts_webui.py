@@ -438,7 +438,9 @@ def create_gradio_interface():
                 # Concatenate all audio segments
                 if generated_audio_segments:
                     final_audio_data = np.concatenate(generated_audio_segments)
-                    return [(sr, final_audio_data)] + [speech_types[style]["ref_text"] for style in speech_types]
+                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_audio:
+                        sf.write(tmp_audio.name, final_audio_data, sr)
+                        return [tmp_audio.name] + [speech_types[style]["ref_text"] for style in speech_types]
                 else:
                     gr.Warning("No audio generated.")
                     return [None] + [speech_types[style]["ref_text"] for style in speech_types]
