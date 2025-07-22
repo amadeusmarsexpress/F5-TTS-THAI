@@ -8,6 +8,7 @@ import soundfile as sf
 from cached_path import cached_path
 import argparse
 import os
+import numpy as np
 
 from f5_tts.infer.utils_infer import (
     hop_length,
@@ -376,7 +377,8 @@ def create_gradio_interface():
             generate_multistyle_btn = gr.Button("สร้าง", variant="primary")
 
             # Output audio
-            audio_output_multistyle = gr.Audio(label="เสียงที่สร้าง", type="filepath")
+            audio_output_multistyle = gr.Audio(label="เสียงที่สร้าง")
+            download_btn_multistyle = gr.DownloadButton(label="ดาวน์โหลด", value=None, variant="secondary")
 
             def generate_multistyle_speech(
                 gen_text,
@@ -438,12 +440,16 @@ def create_gradio_interface():
                 # Concatenate all audio segments
                 if generated_audio_segments:
                     final_audio_data = np.concatenate(generated_audio_segments)
+                    
+                    # Create temporary file for download
                     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_audio:
                         sf.write(tmp_audio.name, final_audio_data, sr)
-                        return [tmp_audio.name] + [speech_types[style]["ref_text"] for style in speech_types]
+                        download_path = tmp_audio.name
+                    
+                    return ((sr, final_audio_data), download_path, *[speech_types[style]["ref_text"] for style in speech_types])
                 else:
                     gr.Warning("No audio generated.")
-                    return [None] + [speech_types[style]["ref_text"] for style in speech_types]
+                    return (None, None, *[speech_types[style]["ref_text"] for style in speech_types])
 
             generate_multistyle_btn.click(
                 generate_multistyle_speech,
@@ -458,7 +464,7 @@ def create_gradio_interface():
                 + [
                     remove_silence_multistyle,
                 ],
-                outputs=[audio_output_multistyle] + speech_type_ref_texts,
+                outputs=[audio_output_multistyle, download_btn_multistyle] + speech_type_ref_texts,
             )
 
             # Validation function to disable Generate button if speech types are missing
