@@ -376,7 +376,7 @@ def create_gradio_interface():
             generate_multistyle_btn = gr.Button("สร้าง", variant="primary")
 
             # Output audio
-            audio_output_multistyle = gr.Audio(label="เสียงที่สร้าง")
+            audio_output_multistyle = gr.Audio(label="เสียงที่สร้าง", type="filepath")
 
             def generate_multistyle_speech(
                 gen_text,
